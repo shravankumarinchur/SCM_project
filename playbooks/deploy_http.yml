@@ -23,15 +23,3 @@
         owner: root
         group: root
         mode: "0644"
-
-    - name: Allow port 80 firewall rule (firewalld)
-      firewalld:
-        port: 80/tcp
-        permanent: yes
-        state: enabled
-      when: ansible_facts['os_family'] == "RedHat"
-
-    - name: Reload firewalld
-      firewalld:
-        state: reloaded
-      when: ansible_facts['os_family'] == "RedHat"
