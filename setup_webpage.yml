@@ -1,0 +1,52 @@
+---
+- name: Setup Simple HTTP Page on Oracle Linux
+  hosts: your_target_hosts  # Replace with your inventory group (e.g., 'webservers')
+  become: yes  # Ensures tasks run with sudo/root privileges
+
+  vars:
+    web_content_dir: /var/www/html
+    index_html_content: |
+      <!DOCTYPE html>
+      <html>
+      <head>
+          <title>Oracle Linux SCM Project</title>
+      </head>
+      <body>
+          <h1>oracle linux</h1>
+          <p>version - 1</p>
+      </body>
+      </html>
+
+  tasks:
+    - name: 1. Ensure httpd package is installed
+      ansible.builtin.package:
+        name: httpd
+        state: present
+
+    - name: 2. Ensure httpd service is running and enabled
+      ansible.builtin.service:
+        name: httpd
+        state: started
+        enabled: yes
+
+    - name: 3. Create custom index.html content
+      ansible.builtin.copy:
+        content: "{{ index_html_content }}"
+        dest: "{{ web_content_dir }}/index.html"
+        owner: apache
+        group: apache
+        mode: '0644'
+
+    - name: 4. Open firewall port for HTTP (port 80)
+      ansible.posix.firewalld:
+        service: http
+        permanent: true
+        state: enabled
+      notify:
+        - Reload Firewalld
+
+  handlers:
+    - name: Reload Firewalld
+      ansible.builtin.service:
+        name: firewalld
+        state: reloaded
