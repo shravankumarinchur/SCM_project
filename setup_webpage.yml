@@ -1,7 +1,7 @@
 ---
 - name: Setup Simple HTTP Page on Oracle Linux
   hosts: your_target_hosts  # <-- IMPORTANT: Replace with your inventory group (e.g., 'webservers')
-  become: yes  # Ensures all tasks run with sudo/root privileges
+  become: yes               # Ensures all tasks run with sudo/root privileges
 
   vars:
     web_content_dir: /var/www/html
@@ -37,17 +37,12 @@
         group: apache
         mode: '0644'
 
-    - name: 4. Open firewall port for HTTP (port 80)
-      # Using the simpler module name to avoid the 'ansible.posix' collection dependency
-      firewalld:
-        service: http
-        permanent: true
-        state: enabled
-      notify:
-        - Reload Firewalld
+    - name: 4. Open firewall port for HTTP (Permanent)
+      ansible.builtin.command: firewall-cmd --zone=public --add-service=http --permanent
+      # This task adds the rule but does not apply it yet
 
-  handlers:
-    - name: Reload Firewalld
-      ansible.builtin.service:
-        name: firewalld
-        state: reloaded
+    - name: 5. Open firewall port for HTTP (Runtime)
+      ansible.builtin.command: firewall-cmd --reload
+      # This task reloads the firewall to apply the permanent rule
+
+  # Note: Handlers are no longer needed as we use explicit commands for firewall reload
