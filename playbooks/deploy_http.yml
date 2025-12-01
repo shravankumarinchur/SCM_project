@@ -1,0 +1,37 @@
+---
+- name: Deploy simple HTTP page on Oracle Linux
+  hosts: all
+  become: yes
+
+  tasks:
+
+    - name: Install Nginx web server
+      yum:
+        name: nginx
+        state: present
+
+    - name: Ensure Nginx service is enabled and started
+      service:
+        name: nginx
+        enabled: yes
+        state: started
+
+    - name: Deploy custom HTML page
+      copy:
+        src: ../files/index.html
+        dest: /usr/share/nginx/html/index.html
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Allow port 80 firewall rule (firewalld)
+      firewalld:
+        port: 80/tcp
+        permanent: yes
+        state: enabled
+      when: ansible_facts['os_family'] == "RedHat"
+
+    - name: Reload firewalld
+      firewalld:
+        state: reloaded
+      when: ansible_facts['os_family'] == "RedHat"
